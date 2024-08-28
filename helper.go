@@ -11,6 +11,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -61,13 +62,59 @@ func (h *Helper) GetConvertFormattedDate(timeStamp string) (string, error) {
 	return formattedDate, nil
 }
 
-func (h *Helper) ParsePrivateKey(privateKeyString string) (*rsa.PrivateKey, error) {
+func (h *Helper) ParsePrivateKey(privateKeyString string) (any, error) {
 	block, _ := pem.Decode([]byte(privateKeyString))
 
-	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
 		return nil, err
 	}
 
 	return privateKey, nil
+}
+
+func (h *Helper) VerifySHA256RSA(stringToSign string, publicKeyString string, signatureString string) (bool, error) {
+
+	// Format the public key in PEM format
+	pemKey := fmt.Sprintf(`-----BEGIN PUBLIC KEY-----
+%s
+-----END PUBLIC KEY-----`, publicKeyString)
+
+	// Decode the PEM block
+	block, _ := pem.Decode([]byte(pemKey))
+	if block == nil || block.Type != "PUBLIC KEY" {
+		return false, errors.New("failed to decode PEM block containing public key")
+	}
+
+	// Parse the public key
+	publicKey, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return false, fmt.Errorf("failed to parse public key: %v", err)
+	}
+
+	// Assert that the parsed key is an *rsa.PublicKey
+	rsaPublicKey, ok := publicKey.(*rsa.PublicKey)
+	if !ok {
+		return false, errors.New("not an RSA public key")
+	}
+
+	// Decode the base64 signature
+	signature, err := base64.StdEncoding.DecodeString(signatureString)
+	if err != nil {
+		return false, fmt.Errorf("failed to decode base64 signature: %v", err)
+	}
+
+	// Create a SHA-256 hash of the stringToSign
+	hash := sha256.New()
+	hash.Write([]byte(stringToSign))
+	digest := hash.Sum(nil)
+
+	// Verify the signature using RSA-PSS
+	err = rsa.VerifyPKCS1v15(rsaPublicKey, crypto.SHA256, digest, signature)
+	if err != nil {
+		return false, fmt.Errorf("verification failed: %v", err)
+	}
+
+	// If no error, the signature is verified
+	return true, nil
 }

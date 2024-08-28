@@ -20,7 +20,7 @@ type HttpRequest struct {
 	HttpClient *http.Client
 }
 
-func (r *HttpRequest) Request(headers map[string]string, requestURL string, requestBody interface{}) ([]byte, error) {
+func (r *HttpRequest) Request(headers map[string]string, requestURL string, requestBody interface{}, httpMethod string) ([]byte, error) {
 	if r.HttpClient == nil {
 		r.HttpClient = &http.Client{}
 	}
@@ -32,7 +32,7 @@ func (r *HttpRequest) Request(headers map[string]string, requestURL string, requ
 		}
 	}
 
-	req, err := http.NewRequest("POST", requestURL, bytes.NewBuffer(bodyBytes))
+	req, err := http.NewRequest(httpMethod, requestURL, bytes.NewBuffer(bodyBytes))
 	if err != nil {
 		return nil, err
 	}

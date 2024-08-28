@@ -32,10 +32,14 @@ func (s *Snap) RequestSnapAccessToken(parameter map[string]interface{}) (*Respon
 		"X-SIGNATURE":  signature,
 	}
 
-	body, err := s.HttpClient.Request(headers, url, parameter)
+	body, err := s.HttpClient.Request(headers, url, parameter, `POST`)
+
+	if err != nil {
+		fmt.Printf("Error when requesting %s : %s", url, err.Error())
+	}
 
 	if len(body) == 0 {
-		return &ResponseAccessToken{}, fmt.Errorf("Empty response body")
+		return &ResponseAccessToken{}, fmt.Errorf("empty response body")
 	}
 
 	err = json.Unmarshal(body, &response)
@@ -48,12 +52,16 @@ func (s *Snap) RequestSnapAccessToken(parameter map[string]interface{}) (*Respon
 	return &response, nil
 }
 
-func (s *Snap) RequestSnapTransaction(parameter map[string]interface{}, endPoint string, accessToken string) (map[string]interface{}, error) {
+func (s *Snap) RequestSnapTransaction(parameter map[string]interface{}, endPoint string, accessToken string, httpMethod string) (map[string]interface{}, error) {
 	var response map[string]interface{}
 	formattedDate := s.Helper.GetFormattedDate()
 	url := s.ApiConfig.GetSnapAPIBaseURL() + endPoint
 	hexPayload, err := s.Helper.GetEncodePayload(parameter["body"])
-	stringToSign := fmt.Sprintf("POST:%s:%s:%s:%s", endPoint, accessToken, hexPayload, formattedDate)
+
+	if err != nil {
+		fmt.Println("Error when encoding payload")
+	}
+	stringToSign := fmt.Sprintf("%s:%s:%s:%s:%s", httpMethod, endPoint, accessToken, hexPayload, formattedDate)
 	signature := s.Helper.GetRegistSignature(stringToSign, s.ApiConfig.ClientSecret)
 
 	headers := map[string]string{
@@ -66,10 +74,13 @@ func (s *Snap) RequestSnapTransaction(parameter map[string]interface{}, endPoint
 		"CHANNEL-ID":    parameter["headers"].(map[string]string)["CHANNEL_ID"],
 	}
 
-	body, err := s.HttpClient.Request(headers, url, parameter["body"])
+	body, err := s.HttpClient.Request(headers, url, parameter["body"], httpMethod)
+	if err != nil {
+		fmt.Printf("Error when requesting %s : %s", url, err.Error())
+	}
 
 	if len(body) == 0 {
-		return nil, fmt.Errorf("Empty response body")
+		return nil, fmt.Errorf("empty response body")
 	}
 
 	err = json.Unmarshal(body, &response)
