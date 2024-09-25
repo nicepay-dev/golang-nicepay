@@ -5,52 +5,27 @@ import (
 	"encoding/pem"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"testing"
 	"time"
 )
 
-var privKeyStr string = `-----BEGIN RSA PRIVATE KEY-----
-MIIEogIBAAKCAQBzElwG7JVPdSvPu4xDIKuh0Dw3KkporGM0m9TuPMYSHm8/S4Ko
-dPSv2+VJ0pCoxngIRdRdxyR1ps4T+up+GWRZHy0qRXvtMEiAJuYAmKvxkqaiYb7r
-TFl2qQRA8gfBU97FfQM1YerclPp6B9JD5bRL5Dm7e+bXIeLdtPYGG3B99hru/6vn
-Iri5yPa2EVmdCIkUD/wP6mY8W9nRIyp7X0ChjebnMsGtcRmMfGsbLKWyPV1PeeZw
-dxMNnr27XdBcxsYeDcrfe+lytDgyJzj+pRNPbWMv/KD00yg3+4ZQQdK/rxy+Uw3/
-WN7Fw8mSbpob6vv3Oz0bHTCVFhWS8mp5dDvPAgMBAAECggEAToW7uJnedV8ea12u
-o+v6UqwXOwmnxu/DrpWb4ookGx8biNSNL0jH4+0o9Iw0XIc6R2LnPKr0zTfrLiUt
-uKi5Gju1BUBvBXbKMnDYyJVl163b+bi7oDL0ZY2GMo82DY2e2aKp+tZ7ftRGa9lE
-eUKZGqR9ZNtytWERP3sJ2zcEN187ZvASFABrDNAFwUKQEmNjPeXEyFLJbY2VVXHB
-RvlC8Gf1gu4BjaKKwTrfgo+gYBkBoEeV5wvtYngKrWZmgNBKKOqcMqKGcER3giCv
-NQ7zpUc4wsvvkrjFPJoLTXPi/AYZ1unbxEjUehEkcWTAAWekPI2waVRKnIduve1b
-m3bKAQKBgQC2lo68fR97Al31SzicxCfA2GdRtrnAdBfyc+nw57p59jNKs2piSBAg
-YyvcUBZJG1FxTY62OQR2Xn7h98hXgfJ3fXQTk9uhhjbiKFlmMBkGlq1k5DEP9PLv
-HZ5HswNEPFNSOupjkrOMsoQGDInQr1VW+6AR3YNfoAxrTQEWPx7DAQKBgQChVngh
-c1RAkN6eGn3faUjL1+8yhPj5Q8NRUoBSw/ujZ0Her5S2i8h6sx6r2n8hMHEIUZJ+
-ZvvizLv2Ijl/wF9XTehJxnG62P4uhP3WcAOE6kimt/tiwRPUHfgPnT5HiASI/fJY
-OLMIKCgdCa3kuQwPoH3ZTT9NfIK79aEKoWqOzwKBgAptmONdBhJBdVpQHICfl2Gl
-OmlpVTyPpNp9Ekxm/7h9fjpy+s14LiubXmLr1AoC3GjrNA5mPUIBbZ+8Rh3xVwbK
-DHodxLp57uKFyW1Tq+o7atXLTp4JsGJFv8d6iuI3y85zfPWI6GZNv8qUpr5bdTVN
-k7vRefJZMrxiHoDFxB0BAoGAPtvvxiinBNjsw3DS5f6hTDp/iZFhZ8zNBpw8PwL4
-wftzII4MROtFWvj61D43FflHsNQHXZRGQ2E9QnKnMG0FOIC0JjpZCVGOBxXtyGSw
-GlMlpz87hIhxb02V3o+HOlt2WOGIUHMW3fC3YEjrJZgraNNA9S8xoMEINq9G5Vtq
-puUCgYEAooHr6y4XkbSaOYc+0b1WGRR/1nAv2VaYB3qkAte8X+oyzdBhjRan4u4c
-IJEWjZv/7W/Nsf7PaDSB94e5TIKDvxEnXhsIXIqWDwUI7Op4tcFuZcB46+CVAiWJ
-V6J483Lm/wHi/e27LKQF5hc30/ZED5HRcoy/Gr7yNB2lVXjDZpI=
------END RSA PRIVATE KEY-----`
+var privKeyStr string = `-----BEGIN PRIVATE KEY-----
+
+-----END PRIVATE KEY-----`
 
 var snap = Snap{}
 
-func TestRequestSnapAccessToken(t *testing.T) {
-	// Create an instance of the Snap struct
+var txId string
+var reffNo string
+var amount = "10000.00"
+var vaNo string
 
-	//snap := Snap{}
+func SetApiConfig() {
+
 	block, _ := pem.Decode([]byte(privKeyStr))
 
-	if block == nil || block.Type != "RSA PRIVATE KEY" {
-		fmt.Println("Failed to parse RSA private key")
-		return
-	}
-
-	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	privateKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
 		fmt.Println("Error parsing private key:", err)
 		return
@@ -59,17 +34,34 @@ func TestRequestSnapAccessToken(t *testing.T) {
 	config := map[string]interface{}{
 		"isProduction": false,
 		"privateKey":   privateKey,
-		"clientSecret": "1af9014925cab04606b2e77a7536cb0d5c51353924a966e503953e010234108a",
-		"clientId":     "TNICEVA023",
+		"clientSecret": "", // credentials
+		"clientId":     "", // clientId / merchantID
 	}
 	snap.ApiConfig.SetConfiguration(config)
+
+}
+
+func GetAccessToken() (*ResponseAccessToken, error) {
 
 	parameter := map[string]interface{}{
 		"grantType":      "client_credentials",
 		"additionalInfo": map[string]interface{}{},
 	}
 
-	response, err := snap.RequestSnapAccessToken(parameter)
+	return snap.RequestSnapAccessToken(parameter)
+
+}
+
+func TestRequestSnapAccessToken(t *testing.T) {
+	// Create an instance of the Snap struct
+
+	//snap := Snap{}
+
+	// Set API Config
+	SetApiConfig()
+
+	// Get Access token
+	response, err := GetAccessToken()
 
 	if err != nil {
 		t.Errorf("RequestSnapAccessToken failed: %v", err)
@@ -85,29 +77,18 @@ func TestRequestSnapTransaction(t *testing.T) {
 	rand.Seed(time.Now().UnixNano())
 	externalId2 := fmt.Sprintf("%06d", rand.Intn(1000000))
 
-	privateKey, err := snap.Helper.ParsePrivateKey(privKeyStr)
+	// Set API Config
+	SetApiConfig()
+
+	// Get Access Token
+	response, err := GetAccessToken()
 
 	if err != nil {
-		fmt.Println("Error parsing private key:", err)
-		return
+		fmt.Printf("Error request snap access token : %s", err.Error())
 	}
-
-	config := map[string]interface{}{
-		"isProduction": false,
-		"privateKey":   privateKey,
-		"clientSecret": "1af9014925cab04606b2e77a7536cb0d5c51353924a966e503953e010234108a",
-		"clientId":     "TNICEVA023",
-	}
-	snap.ApiConfig.SetConfiguration(config)
-
-	parameterAccessToken := map[string]interface{}{
-		"grantType":      "client_credentials",
-		"additionalInfo": map[string]interface{}{},
-	}
-
-	response, err := snap.RequestSnapAccessToken(parameterAccessToken)
-
 	accessToken := response.AccessToken
+
+	reffNo = "order" + strconv.FormatInt(time.Now().UnixNano()/int64(time.Millisecond), 10)
 
 	parameterRegisterVA := map[string]interface{}{
 		"body": map[string]interface{}{
@@ -115,9 +96,9 @@ func TestRequestSnapTransaction(t *testing.T) {
 			"customerNo":         "",
 			"virtualAccountNo":   "",
 			"virtualAccountName": "John Test",
-			"trxId":              "2020102900000000000001",
+			"trxId":              reffNo,
 			"totalAmount": map[string]string{
-				"value":    "10000.00",
+				"value":    amount,
 				"currency": "IDR",
 			},
 			"additionalInfo": map[string]string{
@@ -135,21 +116,110 @@ func TestRequestSnapTransaction(t *testing.T) {
 		},
 		"headers": map[string]string{
 			"X_EXTERNAL_ID": externalId2,
-			"CHANNEL_ID":    "TNICEVA02301",
+			"CHANNEL_ID":    "", // merchantId
 		},
 	}
 	endPoint := "/api/v1.0/transfer-va/create-va"
-	responseTransaction, err := snap.RequestSnapTransaction(parameterRegisterVA, endPoint, accessToken)
+	httpMethod := "POST"
+	responseTransaction, err := snap.RequestSnapTransaction(parameterRegisterVA, endPoint, accessToken, httpMethod)
+	if err != nil {
+		fmt.Printf("Error requesting %s : %s", endPoint, err.Error())
+	}
+
 	responseCode, _ := responseTransaction["responseCode"].(string)
 	virtualAccountNo, ok := responseTransaction["virtualAccountData"].(map[string]interface{})["virtualAccountNo"].(string)
+
+	vaNo = virtualAccountNo
+	txId = responseTransaction["virtualAccountData"].(map[string]interface{})["additionalInfo"].(map[string]interface{})["tXidVA"].(string)
+
 	if !ok {
 		fmt.Println("Error Virtual Account not found")
 	}
 
-	fmt.Println(virtualAccountNo)
-
 	if responseCode != "2002700" {
 		t.Errorf("Unexpected response. Got %v, want %v", response, "2002700")
+	}
+
+	fmt.Printf("Success VA registration with TxId = %s | VaNo = %s | reffNo = %s\n", txId, vaNo, reffNo)
+
+}
+
+func TestCancelVASnapTransaction(t *testing.T) {
+
+	// Create VA
+	TestRequestSnapTransaction(t)
+
+	// START TEST CANCEL VA
+	externalId2 := fmt.Sprintf("%06d", rand.Intn(1000000))
+	// Set API Config
+	SetApiConfig()
+
+	// Get Access Token
+	response, err := GetAccessToken()
+
+	if err != nil {
+		fmt.Printf("Error request snap access token : %s", err.Error())
+	}
+	accessToken := response.AccessToken
+
+	parameterDelete := map[string]interface{}{
+		"body": map[string]interface{}{
+			"partnerServiceId": "",
+			"customerNo":       "",
+			"virtualAccountNo": vaNo,
+			"trxId":            reffNo,
+			"additionalInfo": map[string]interface{}{
+				"totalAmount": map[string]string{
+					"value":    amount,
+					"currency": "IDR",
+				},
+				"tXidVA":        txId,
+				"cancelMessage": "Cancel Virtual Account",
+			},
+		},
+		"headers": map[string]string{
+			"X_EXTERNAL_ID": externalId2,
+			"CHANNEL_ID":    "", //merchantId
+		},
+	}
+
+	endPoint := "/api/v1.0/transfer-va/delete-va"
+	httpMethod := "DELETE"
+
+	responseTransaction, err := snap.RequestSnapTransaction(parameterDelete, endPoint, accessToken, httpMethod)
+
+	if err != nil {
+		fmt.Printf("Error requesting %s : %s", endPoint, err.Error())
+	}
+
+	responseCode, _ := responseTransaction["responseCode"].(string)
+
+	if responseCode != "2003100" {
+		t.Errorf("Unexpected response. Got %v, want %v", responseCode, "2003100")
+	}
+	fmt.Printf("Success cancel VA with TxId = %s | VaNo = %s | reffNo = %s\n", txId, vaNo, reffNo)
+
+}
+
+func TestVerifySHA256RSA(t *testing.T) {
+
+	// let snap = new Snap();
+
+	signatureString := "VoxMPjbcV9pro4YyHGQgoRj4rDVJgYk2Ecxn+95B90w47Wnabtco35BfhGpR7a5RukUNnAdeOEBNczSFk4B9uYyu3jc+ceX+Dvz5OYSgSnw5CiMHtGiVnTAqCM/yHZ2MRpIEqekBc4BWMLVtexSWp0YEJjLyo9dZPrSkSbyLVuD7jkUbvmEpVdvK0uK15xb8jueCcDA6LYVXHkq/OMggS1/5mrLNriBhCGLuR7M7hBUJbhpOXSJJEy7XyfItTBA+3MRC2FLcvUpMDrn/wz1uH1+b9A6FP7mG0bRSBOm2BTLyf+xJR5+cdd88RhF70tNQdQxhqr4okVo3IFqlCz2FFg=="
+	dataString := "TNICEVA023|2024-08-19T17:12:40+07:00"
+	publicKeyString := "" // String public key
+
+	isVerified, error := snap.Helper.VerifySHA256RSA(dataString, publicKeyString, signatureString)
+
+	fmt.Printf("Is the signature valid? %t \n", isVerified)
+	if error != nil {
+		t.Errorf("error verifying data : %s", error.Error())
+	}
+
+	if isVerified != true {
+		t.Errorf("Data is not valid")
+	} else {
+		fmt.Println("Data is valid")
 	}
 
 }
