@@ -1,4 +1,4 @@
-package library
+package snap
 
 import (
 	"crypto/rsa"
@@ -10,7 +10,6 @@ type Config struct {
 	ClientSecret string
 	ClientID     string
 }
-
 
 func (c *Config) GetConfiguration() map[string]interface{} {
 	return map[string]interface{}{
@@ -57,5 +56,3 @@ func (c *Config) GetSnapAPIBaseURL() string {
 		return "https://dev.nicepay.co.id/nicepay"
 	}
 }
-
-

@@ -1,4 +1,4 @@
-package library
+package snap
 
 import (
 	"bytes"
