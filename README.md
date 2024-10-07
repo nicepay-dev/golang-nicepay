@@ -18,7 +18,6 @@ then reference Nicepay-go in your project file with `import`:
 
 ```go
 import (
-    "github.com/nicepay-dev/golang-nicepay"
     "github.com/nicepay-dev/golang-nicepay/snap"
 )
 ```
@@ -58,7 +57,7 @@ Set a config with globally, (except for iris api)
 > **WARNING:** Credentials used here are for testing purposes only.
 
 ```go
-snap := Snap{}
+snap := snap.Snap{}
 privateKey := key.(*rsa.PrivateKey)
 
 config := map[string]interface{}{
@@ -94,7 +93,7 @@ Sample usage if you prefer Nicepay global configuration & using static function.
 
 ```go
 // 1. Set you ServerKey with globally
-snap := Snap{}
+snap := snap.Snap{}
 privateKey := key.(*rsa.PrivateKey)
 
 config := map[string]interface{}{
