@@ -3,13 +3,12 @@ package snap
 import (
 	"encoding/json"
 	"fmt"
-	"library"
 )
 
 type Snap struct {
-	ApiConfig  library.Config
-	HttpClient library.HttpRequest
-	Helper     library.Helper
+	ApiConfig  Config
+	HttpClient HttpRequest
+	Helper     Helper
 }
 
 func (s *Snap) RequestSnapAccessToken(parameter map[string]interface{}) (*ResponseAccessToken, error) {
