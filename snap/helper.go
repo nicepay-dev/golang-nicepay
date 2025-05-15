@@ -118,3 +118,18 @@ func (h *Helper) VerifySHA256RSA(stringToSign string, publicKeyString string, si
 	// If no error, the signature is verified
 	return true, nil
 }
+
+func (h *Helper) SHA256Encrypt(stringToSign string) string {
+
+	hasher := sha256.New()
+	hasher.Write([]byte(stringToSign))
+	hash := fmt.Sprintf("%x", hasher.Sum(nil))
+
+	return hash
+}
+
+func (h *Helper) GetTimestampFormat() string {
+	now := time.Now()
+
+	return now.Format("20060102150405")
+}
