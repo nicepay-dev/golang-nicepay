@@ -256,7 +256,7 @@ isVerified, error := snap.Helper.VerifySHA256RSA(dataString, publicKeyString, si
 #### 2.4.3 Request Payment API Payment/Direct
 
 ```go
-secondVersion := APIVersion2{}
+	secondVersion := APIVersion2{}
     privateKey := key.(*rsa.PrivateKey)
     config := map[string]interface{}{
     		"isProduction":  false,
@@ -288,6 +288,49 @@ secondVersion := APIVersion2{}
 		fmt.Printf("Error requesting : %s", err.Error())
 	}
 	htmlString := string(responseTransaction)
+```
+
+
+#### 2.5.1 Request Register API Payout
+
+```go
+	secondVersion := APIVersion2{}
+    privateKey := key.(*rsa.PrivateKey)
+    config := map[string]interface{}{
+    		"isProduction":  false,
+    		"privateKey":    privateKey,
+    		"clientSecret":  "33F49GnCMS1mFYlGXisbUDzVf2ATWCl9k3R++d5hDd3Frmuos/XLx8XhXpe+LDYAbpGKZYSwtlyyLOtS/8aD7A==",
+    		"clientId":      "IONPAYTEST",
+    		"isCloudServer": false,
+    		"merchantKey":   "33F49GnCMS1mFYlGXisbUDzVf2ATWCl9k3R++d5hDd3Frmuos/XLx8XhXpe+LDYAbpGKZYSwtlyyLOtS/8aD7A==",
+    	}
+    secondVersion.ApiConfig.SetConfiguration(config)
+	
+	parameterRegistPayout := map[string]interface{}{
+		"msId":         "",
+		"accountNo":    "5345000060",
+		"benefNm":      "PT IONPAY NETWORKS",
+		"benefStatus":  "1",
+		"benefType":    "1",
+		"bankCd":       "BDIN",
+		"amt":          "10000",
+		"referenceNo":  "ORD12345",
+		"reservedDt":   "",
+		"reservedTm":   "",
+		"benefPhone":   "082111111111",
+		"description":  "This is test request",
+		"payoutMethod": "",
+	}
+
+	responseTransaction, err := secondVersion.RequestPayoutV2(parameterRegistPayout)
+
+	responseCode, _ := responseTransaction["resultCd"].(string)
+	tXid := ""
+	if responseTransaction["tXid"] != nil {
+		tXid = responseTransaction["tXid"].(string)
+	}
+
+	fmt.Printf("Success registration with TxId = %s | responseCode = %s", tXid, responseCode)
 ```
 
 ## 3. Examples
