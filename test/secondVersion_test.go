@@ -1,13 +1,15 @@
-package snap
+package test
 
 import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
 	"testing"
+
+	v2 "github.com/nicepay-dev/golang-nicepay/v2"
 )
 
-var secondVersion = APIVersion2{}
+var secondVersion = v2.APIVersion2{}
 
 func setConf() {
 
