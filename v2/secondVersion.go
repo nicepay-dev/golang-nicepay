@@ -1,15 +1,17 @@
-package snap
+package v2
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+
+	utils "github.com/nicepay-dev/golang-nicepay/utils"
 )
 
 type APIVersion2 struct {
-	ApiConfig  Config
-	HttpClient HttpRequest
-	Helper     Helper
+	ApiConfig  utils.Config
+	HttpClient utils.HttpRequest
+	Helper     utils.Helper
 }
 
 // Do transaction API request to API Direct/Redirect V2 (Register, Inquiry, Cancel)
@@ -38,8 +40,8 @@ func (av *APIVersion2) RequestRegisterAPIVersion2(parameter map[string]interface
 		stringToSign = fmt.Sprintf("%s%s%s%s%s", timeStamp, av.ApiConfig.ClientID, tXid, amt, av.ApiConfig.MerchantKey)
 	} else {
 		stringToSign = fmt.Sprintf("%s%s%s%s%s", timeStamp, av.ApiConfig.ClientID, referenceNo, amt, av.ApiConfig.MerchantKey)
-	}		
-	
+	}
+
 	merchantToken := av.Helper.SHA256Encrypt(stringToSign)
 
 	requestBody := make(map[string]interface{})
@@ -126,7 +128,6 @@ func (av *APIVersion2) RequestPaymentAPIVersion2(parameter map[string]interface{
 
 	return body, nil
 }
-
 
 // Do transaction API request to API Payout V2
 // @param  {interface} parameter - interface of request body API Register/Checkout/Inquiry/Cancel Nicepay.

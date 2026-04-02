@@ -3,12 +3,26 @@ package snap
 import (
 	"encoding/json"
 	"fmt"
+
+	utils "github.com/nicepay-dev/golang-nicepay/utils"
 )
 
 type Snap struct {
-	ApiConfig  Config
-	HttpClient HttpRequest
-	Helper     Helper
+	ApiConfig  utils.Config
+	HttpClient utils.HttpRequest
+	Helper     utils.Helper
+}
+
+func NewSnap(
+	config utils.Config,
+	httpClient utils.HttpRequest,
+	helper utils.Helper,
+) *Snap {
+	return &Snap{
+		ApiConfig:  config,
+		HttpClient: httpClient,
+		Helper:     helper,
+	}
 }
 
 func (s *Snap) RequestSnapAccessToken(parameter map[string]interface{}) (*ResponseAccessToken, error) {
